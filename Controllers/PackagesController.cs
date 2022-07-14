@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DevTrackR.API.Entities;
 using DevTrackR.API.Models;
+using DevTrackR.API.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevTrackR.API.Controllers
@@ -12,38 +13,65 @@ namespace DevTrackR.API.Controllers
     [Route("api/packages")]
     public class PackagesController : ControllerBase
     {
+        private readonly DevTrackRContext _context;
+        public PackagesController(DevTrackRContext context)
+        {
+            _context = context;
+        }
+
         // GET api/packages
         [HttpGet]
         public IActionResult GetAll() {
-            var packages = new List<Package> {
-                new Package("Pacote 1", 1.3M),
-                new Package("Pacote 2", 0.2M)
-            };
+            var packages = _context.Packages;
+
             return Ok(packages);
         }
 
         // GET api/packages/1234-5678-1234-5678
         [HttpGet("{code}")]
-        public IActionResult GetByCode(string code){
-            var package = new Package("Pacote 2", 0.2M);
+        public IActionResult GetByCode(string code) {
+            var package = _context
+                .Packages
+                .SingleOrDefault(p => p.Code == code);
+
+            if (package == null){
+                return NotFound();
+            }
+
             return Ok(package);
         }
 
         // POST api/packages
         [HttpPost]
-        public IActionResult Post(AddPackageInputModel model){
+        public IActionResult Post(AddPackageInputModel model) {
+            if (model.Title.Length < 10) {
+                return BadRequest("Title length must be at least 10 characters long.");
+            }
+            
             var package = new Package(model.Title, model.Weight);
-            return Ok(package);
+
+            _context.Packages.Add(package);
+
+            return CreatedAtAction(
+                "GetByCode",
+                new {code = package.Code},
+                package);
         }
 
         // POST api/packages/1234-5678-1234-5678/updates
         [HttpPost("{code}/updates")]
         public IActionResult PostUpdate(string code, AddPackageUpdateInputModel model){
-            var package = new Package("Pacote 1", 1.2M);
+             var package = _context
+                .Packages
+                .SingleOrDefault(p => p.Code == code);
+
+            if (package == null){
+                return NotFound();
+            }
 
             package.AddUpdate(model.Status, model.Delivered);
 
-            return Ok();
+            return NoContent();
         }
     }
 }
