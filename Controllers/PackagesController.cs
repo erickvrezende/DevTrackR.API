@@ -6,6 +6,7 @@ using DevTrackR.API.Entities;
 using DevTrackR.API.Models;
 using DevTrackR.API.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DevTrackR.API.Controllers
 {
@@ -32,6 +33,7 @@ namespace DevTrackR.API.Controllers
         public IActionResult GetByCode(string code) {
             var package = _context
                 .Packages
+                .Include(p => p.Updates)
                 .SingleOrDefault(p => p.Code == code);
 
             if (package == null){
@@ -51,6 +53,7 @@ namespace DevTrackR.API.Controllers
             var package = new Package(model.Title, model.Weight);
 
             _context.Packages.Add(package);
+            _context.SaveChanges();
 
             return CreatedAtAction(
                 "GetByCode",
@@ -70,6 +73,8 @@ namespace DevTrackR.API.Controllers
             }
 
             package.AddUpdate(model.Status, model.Delivered);
+
+            _context.SaveChanges();
 
             return NoContent();
         }
