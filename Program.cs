@@ -10,11 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DevTrackRCs");
 
-builder.Services
-    .AddDbContext<DevTrackRContext>(o => o.UseSqlServer(connectionString));
-
-// builder.Services
-//     .AddDbContext<DevTrackRContext>(o => o.UseInMemoryDatabase("DevTrackRCs"));
+// builder.Services.AddDbContext<DevTrackRContext>(o => o.UseSqlServer(connectionString));
+builder.Services.AddDbContext<DevTrackRContext>(o => o.UseInMemoryDatabase("DevTrackRDb"));
 
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 
@@ -43,7 +40,7 @@ builder.Services.AddSwaggerGen(o => {
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (true)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
